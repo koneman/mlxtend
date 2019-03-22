@@ -312,7 +312,8 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
         else:
             select_in_range = False
             k_to_select = self.k_features
-
+        
+        # do custom subset update to log file
         self.subsets_ = {}
         orig_set = set(range(X_.shape[1]))
         n_features = X_.shape[1]
