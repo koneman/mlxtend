@@ -218,7 +218,7 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
         # don't mess with this unless testing
         self._TESTING_INTERRUPT_MODE = False
 
-    def fit(self, X, y, custom_feature_names=None, **fit_params):
+    def fit(self, X, y, log_file, custom_feature_names=None, **fit_params):
         """Perform feature selection and learn model from training data.
 
         Parameters
@@ -257,6 +257,11 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
             X_ = X.values
         else:
             X_ = X
+            
+        # initial file values
+        with open(log_file, 'a') as fp:
+            fp.write('0\n')
+            fp.write("{}\n".format(self.k_features))
 
         if (custom_feature_names is not None
                 and len(custom_feature_names) != X.shape[1]):
@@ -357,6 +362,37 @@ class SequentialFeatureSelector(BaseEstimator, MetaEstimatorMixin):
                         y=y,
                         **fit_params
                     )
+                    
+                # !-----------------
+                # logging to internal file
+                # import pdb; pdb.set_trace()
+
+                if custom_index in self.subsets_:
+                    with open(log_file, 'a') as fp:
+
+                        for run, data in self.subsets_.iteritems():
+                            if run == custom_index:
+                                AUC_arr = []
+                                feats_idx = []
+                                for text, value in data.iteritems():
+                                    if text == 'avg_score':
+                                        # print (y)
+                                        AUC_arr += [float(value)]
+                                    elif text == 'feature_idx':
+                                        # print(y)
+                                        feats_idx += value
+                                # print(AUC_arr)
+                                # print(feats_idx)
+                                temp_feats = [0] * X_.shape[1]
+                                for each_feat_idx in feats_idx:
+                                    temp_feats[each_feat_idx] = 1
+                                if len(AUC_arr) > 1:
+                                    print('ERROR!!')
+                                    print('More than 1 AUC value!!!')
+                                fp.write("{}\t{}\t{}\n".format(temp_feats, len(feats_idx), AUC_arr[0]))
+                        custom_index += 1
+
+                    # print(self.subsets_)
 
                 if self.floating:
 
